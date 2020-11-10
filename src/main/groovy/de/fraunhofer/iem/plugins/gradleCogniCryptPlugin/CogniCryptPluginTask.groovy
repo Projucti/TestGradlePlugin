@@ -24,11 +24,11 @@ class CogniCryptPluginTask extends DefaultTask {
         log.info("Starting  sample task");
         String result
         if(file1.get().size()== file2.get().size()){
-            result= "File has same size"
+            result= "Files have the same size"
         }
         else {
             File largeFile= file1.get().size()>file2.get().size() ? file1.get(): file2.get()
-            result="${largeFile.toString()} was the large file"
+            result="${largeFile.toString()} was the largest file at ${largeFile.size()} bytes"
         }
         resultFile.write(result)
         println("File written to ${resultFile}")

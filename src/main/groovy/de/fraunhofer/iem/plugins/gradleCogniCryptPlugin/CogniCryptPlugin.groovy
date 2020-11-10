@@ -7,7 +7,7 @@ class CogniCryptPlugin implements Plugin<Project>{
     @Override
     void apply(Project project) {
         project.extensions.create('diff',CogniCryptPluginExtension.class)
-        project.tasks.create('diff', CogniCryptPluginTask){
+        project.tasks.create('diff', CogniCryptPluginTask.class){
             file1= project.diff.file1
             file2= project.diff.file2
         }

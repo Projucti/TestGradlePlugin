@@ -12,7 +12,7 @@ class gradleCogniCryptPluginIntegrationTest extends Specification{
     File buildFile
     def setup(){
         buildFile=testProjectDir.newFile('build.gradle')
-        buildFile<<"""
+        buildFile <<"""
             plugins{
                 id 'de.fraunhofer.iem.plugins.gradleCogniCryptPlugin'
             }
@@ -24,7 +24,7 @@ class gradleCogniCryptPluginIntegrationTest extends Specification{
         File testFile2 = testProjectDir.newFile('testFile2.txt')
 
         buildFile << """
-            fileDiff {
+            diff {
                 file1 = file('${testFile1.getName()}')
                 file2 = file('${testFile2.getName()}')
             }
@@ -37,6 +37,6 @@ class gradleCogniCryptPluginIntegrationTest extends Specification{
                 .build()
         then:
         result.output.contains("Files have the same size")
-        result.task("diff").outcome == SUCCESS
+        result.task(":diff").outcome == SUCCESS
     }
 }
