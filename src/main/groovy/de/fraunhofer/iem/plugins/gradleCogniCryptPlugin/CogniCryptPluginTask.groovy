@@ -1,39 +1,35 @@
 package de.fraunhofer.iem.plugins.gradleCogniCryptPlugin
 
+
 import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputFile
+
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskExecutionException
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFactory
+
 
 class CogniCryptPluginTask extends DefaultTask {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+        private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    @InputFile
-    Property<File> file1
-    @InputFile
-    Property<File> file2
-    @OutputFile
-    File resultFile= new File("${project.buildDir}/result.txt")
+        @TaskAction
+        public void sampleTaskPlugin() throws TaskExecutionException {
+            log.info("Starting sample Task")
+            try {
+                CogniCryptPlugin plugin = getProject().getExtensions().findByType(CogniCryptPlugin.class);
+                log.info("my code part starts")
+                plugin.doExecute();
+            }
+            catch (Exception e) {
+                log.error("", e)
+                throw new TaskExecutionException(this, new Exception("Exception occurred while processing Task ", e))
+            }
+        }
 
-    @TaskAction
-    def diff(){
-        log.info("Starting  sample task");
-        String result
-        if(file1.get().size()== file2.get().size()){
-            result= "Files have the same size"
-        }
-        else {
-            File largeFile= file1.get().size()>file2.get().size() ? file1.get(): file2.get()
-            result="${largeFile.toString()} was the largest file at ${largeFile.size()} bytes"
-        }
-        resultFile.write(result)
-        println("File written to ${resultFile}")
-        println(result)
-        log.info("Successfully completed sample Task");
 
     }
-}
+
+
+
+

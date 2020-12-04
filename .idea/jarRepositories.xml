@@ -16,5 +16,25 @@
       <option name="name" value="BintrayJCenter" />
       <option name="url" value="https://jcenter.bintray.com/" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="soot snapshots" />
+      <option name="name" value="soot snapshots" />
+      <option name="url" value="https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-snapshot/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="soot release" />
+      <option name="name" value="soot release" />
+      <option name="url" value="https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-release/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="guava" />
+      <option name="name" value="guava" />
+      <option name="url" value="https://mvnrepository.com/artifact/com.google.guava/guava" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="MavenLocal" />
+      <option name="name" value="MavenLocal" />
+      <option name="url" value="file:/$MAVEN_REPOSITORY$/" />
+    </remote-repository>
   </component>
 </project>
