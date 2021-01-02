@@ -24,9 +24,9 @@ import soot.Unit
 
 import java.util.regex.Pattern
 
-class CogniCryptPlugin extends SootMojo implements Plugin<Project>{
+class CogniCryptPlugin extends SootGradle implements Plugin<Project>{
 
-    private String rulesDirectory= project.getProperty("rulesDirectory");
+    //private String rulesDirectory= System.getProperty("rulesDirectory");
     private String reportsFolderParameter="cognicrypt-reports";
     private String outputFormat="standard";
     private boolean dynamicCg= "true";
@@ -34,9 +34,9 @@ class CogniCryptPlugin extends SootMojo implements Plugin<Project>{
     void apply(Project project) {
 
         project.extensions.create('difff',CogniCryptPluginExtension.class)
-        project.tasks.create('diff', CogniCryptPluginTask.class){
+        project.tasks.create('myTask', CogniCryptPluginTask.class){
             validateParameters();
-            super.doExecute();
+            super.doExecute(project);
         }
     }
 
