@@ -15,8 +15,14 @@ import crypto.reporting.SourceCodeLocater
 import crypto.rules.CrySLRule
 import crypto.rules.CrySLRuleReader
 import org.gradle.api.GradleException
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.component.Artifact
+import org.gradle.api.plugins.quality.CodeQualityExtension
+import org.gradle.api.plugins.quality.internal.AbstractCodeQualityPlugin
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
+
 import soot.SceneTransformer
 import soot.SootMethod
 import soot.Transformer
@@ -24,26 +30,89 @@ import soot.Unit
 
 import java.util.regex.Pattern
 
-class CogniCryptPlugin extends SootGradle implements Plugin<Project>{
+class CogniCryptPlugin extends AbstractCodeQualityPlugin<SootGradle> {
 
-    //private String rulesDirectory= System.getProperty("rulesDirectory");
-    private String reportsFolderParameter="cognicrypt-reports";
-    private String outputFormat="standard";
-    private boolean dynamicCg= "true";
+    private String reportsFolderParameter;
+    private String outputFormat;
+    private boolean dynamicCg;
+    public String rulesDirectory;
+    private Optional<File> targetDir = Optional.empty();
+
     @Override
-    void apply(Project project) {
-
-        project.extensions.create('difff',CogniCryptPluginExtension.class)
-        project.tasks.create('myTask', CogniCryptPluginTask.class){
-            validateParameters();
-            super.doExecute(project);
-        }
+    protected String getToolName() {
+        return "CogniCrypt"
     }
 
     @Override
+    protected Class<SootGradle> getTaskType() {
+        return SootGradle.class;
+    }
+    @Override
+    protected CodeQualityExtension createExtension() {
+        extension=project.getExtensions().create("cognicryptExtension", CogniCryptPluginExtension.class,project);
+        extension.setToolVersion(project.properties.get('version'));
+        //extension.setRulesets();
+        //extension.setRuleSetFiles(project.getLayout().files());
+        //conventionMappingOf(extension).map("targetJdk", ()->getDefaultTargetJdk(getJavaPluginConvention().getSourceCompatibility()));
+        validateParameters();
+        createAnalysisTransformer();
+        return extension;
+    }
+
+
+    @Override
+    protected void configureConfiguration(Configuration configuration) {
+        configureDefaultDependencies(configuration);
+
+    }
+
+
+    private void configureDefaultDependencies(Configuration configuration) {
+        Set<Artifact> artifacts;
+        configuration.compile.resolvedConfiguration.resolvedArtifacts.each {
+            //artifacts=println it.name // << the artifact name
+            artifacts=println it.file // << the file reference
+        }
+    }
+
+
+    @Override
+    protected void configureTaskDefaults(SootGradle task, String baseName) {
+        Configuration configuration = project.getConfigurations().getAt(getConfigurationName());
+    }
+
+    @OutputDirectory
+    private File getReportFolder() {
+        File reportsFolder = new File(reportsFolderParameter);
+        if (!reportsFolder.isAbsolute()) {
+            reportsFolder = new File(getProjectTargetDir(), reportsFolderParameter);
+        }
+        if (!reportsFolder.exists()) {
+            reportsFolder.mkdirs();
+        }
+        return reportsFolder;
+    }
+    /**
+     * Receives the set of rules form a given directory.
+     */
+    @InputFiles
+    private List<CrySLRule> getRules() throws CryptoAnalysisException {
+        return CrySLRuleReader.readFromDirectory(new File(rulesDirectory));
+    }
+
+    private void validateParameters() {
+        if (!new File(rulesDirectory).exists() || !new File(rulesDirectory).isDirectory()) {
+            throw new GradleException("Failed to locate the folder of the CrySL rules. " +
+                    "Specify -Dcognicrypt.rulesDirectory=<PATH-TO-CRYSL-RULES>.")
+        }
+        if (!Pattern.matches("(standard|sarif)", outputFormat)) {
+            throw new GradleException("Incorrect output format specified. " +
+                    "Use -Dcognicrypt.outputFormat=[standard|sarif].")
+        }
+    }
+
     protected Transformer createAnalysisTransformer() {
         return new SceneTransformer() {
-
             @Override
             protected void internalTransform(String phaseName, Map<String, String> options) {
                 BoomerangPretransformer.v().reset()
@@ -63,12 +132,11 @@ class CogniCryptPlugin extends SootGradle implements Plugin<Project>{
                 if (outputFormat.equalsIgnoreCase("standard")) {
                     fileReporter = new CommandLineReporter(getReportFolder().getAbsolutePath(), rules)
                 } else if (outputFormat.equalsIgnoreCase("sarif")) {
-                     project = getProject()
                     fileReporter = new SARIFReporter(getReportFolder().getAbsolutePath(), rules,
                             new SourceCodeLocater(project.hasParent() ?
-                                    project.getParent().getBasedir() :
-                                    project.getBasedir()))
-                } else {
+                                    project.getParent() : project.getBasedir()))
+                }
+                else {
                     throw new RuntimeException("Illegal state")
                 }
                 reporter.addReportListener(fileReporter)
@@ -99,32 +167,14 @@ class CogniCryptPlugin extends SootGradle implements Plugin<Project>{
         }
     }
 
-    private void validateParameters() {
-        if (!new File(rulesDirectory).exists() || !new File(rulesDirectory).isDirectory()) {
-            throw new GradleException("Failed to locate the folder of the CrySL rules. " +
-                    "Specify -Dcognicrypt.rulesDirectory=<PATH-TO-CRYSL-RULES>.")
+    public File getProjectTargetDir() {
+        if (!targetDir.isPresent()){
+            File td = new File(project.getBuild().getDirectory());
+            targetDir = Optional.of(td);
         }
-        if (!Pattern.matches("(standard|sarif)", outputFormat)) {
-            throw new GradleException("Incorrect output format specified. " +
-                    "Use -Dcognicrypt.outputFormat=[standard|sarif].")
-        }
-    }
-    /**
-     * Receives the set of rules form a given directory.
-     */
-    private List<CrySLRule> getRules() throws CryptoAnalysisException {
-        return CrySLRuleReader.readFromDirectory(new File(rulesDirectory));
+        return targetDir.get();
     }
 
 
-    private File getReportFolder() {
-        File reportsFolder = new File(reportsFolderParameter);
-        if (!reportsFolder.isAbsolute()) {
-            reportsFolder = new File(getProjectTargetDir(), reportsFolderParameter);
-        }
-        if (!reportsFolder.exists()) {
-            reportsFolder.mkdirs();
-        }
-        return reportsFolder;
-    }
+
 }
