@@ -100,7 +100,7 @@ class CogniCryptPlugin extends AbstractCodeQualityPlugin<SootGradle> {
         return CrySLRuleReader.readFromDirectory(new File(rulesDirectory));
     }
 
-    private void validateParameters() {
+    private void validateParameters() throws GradleException{
         if (!new File(rulesDirectory).exists() || !new File(rulesDirectory).isDirectory()) {
             throw new GradleException("Failed to locate the folder of the CrySL rules. " +
                     "Specify -Dcognicrypt.rulesDirectory=<PATH-TO-CRYSL-RULES>.")

@@ -1,0 +1,24 @@
+plugins{
+    id 'groovy'
+    id 'java-gradle-plugin'
+    id 'java'
+}
+
+group= 'de.fraunhofer.iem.cognicrypt'
+version= 1.0
+
+sourceCompatibility= 1.8
+
+dependencies {
+
+    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.66'
+    compile group: 'com.google.crypto.tink', name: 'tink', version: '1.2.0'
+
+}
+repositories{
+    maven{
+        url 'https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-release/'
+        name 'soot-release'
+    }
+}
+
